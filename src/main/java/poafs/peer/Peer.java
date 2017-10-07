@@ -18,7 +18,7 @@ public class Peer {
 	
 	private String id;
 
-	public Peer( String id, InetSocketAddress addr) {
+	public Peer(String id, InetSocketAddress addr) {
 		this.addr = addr;
 		this.id = id;
 	}

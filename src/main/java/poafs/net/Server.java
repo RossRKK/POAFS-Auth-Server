@@ -1,6 +1,7 @@
 package poafs.net;
 
 import java.io.IOException;
+import java.net.ServerSocket;
 import java.net.Socket;
 
 import javax.net.ssl.SSLServerSocket;
@@ -19,7 +20,7 @@ public class Server implements Runnable {
 	/**
 	 * The server's listening socket.
 	 */
-	private SSLServerSocket ss;
+	private ServerSocket ss;
 	
 	private FileTracker ft;
 	
@@ -30,9 +31,13 @@ public class Server implements Runnable {
 	 * @param port The port the server will listen on.
 	 * @throws IOException
 	 */
-	public Server(int port, FileTracker ft, KeyManager km) throws IOException {
-		SSLServerSocketFactory factory = (SSLServerSocketFactory) SSLServerSocketFactory.getDefault();
-		ss = (SSLServerSocket) factory.createServerSocket(port);
+	public Server(int port, FileTracker ft, KeyManager km, boolean ssl) throws IOException {
+		if (ssl) {
+			SSLServerSocketFactory factory = (SSLServerSocketFactory) SSLServerSocketFactory.getDefault();
+			ss = (SSLServerSocket) factory.createServerSocket(port);
+		} else {
+			ss = new ServerSocket(port);
+		}
 		this.ft = ft;
 		this.km = km;
 	}

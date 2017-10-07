@@ -2,7 +2,9 @@ package poafs.net;
 
 import java.io.BufferedOutputStream;
 import java.io.IOException;
+import java.net.InetSocketAddress;
 import java.net.Socket;
+import java.security.KeyPair;
 import java.util.Collection;
 import java.util.Scanner;
 
@@ -27,6 +29,8 @@ public class RequestHandler implements Runnable {
 	
 	private KeyManager km;
 	
+	private String peerId;
+	
 	/**
 	 * Setup the input and output streams.
 	 * @param s The connected socket.
@@ -46,6 +50,11 @@ public class RequestHandler implements Runnable {
 	 */
 	@Override
 	public void run() {
+		//TODO authenticate the connection
+		println("POAFS Auth 0.1");
+		
+		peerId = in.nextLine();
+		
 		while (in.hasNextLine()) {
 			String[] response = in.nextLine().split(" ");
 			
@@ -98,12 +107,25 @@ public class RequestHandler implements Runnable {
 	}
 
 	/**
-	 * Register a new peer.
-	 * @param peerId The id of the new peer.
+	 * Register this peer with an address.
+	 * @param input [peerId]:[port]
 	 */
-	private void registerPeer(String peerId) {
-		// TODO Auto-generated method stub
+	private void registerPeer(String addr) {
+		String[] address = addr.split(":");
+		String host = address[0];
+		int port = Integer.parseInt(address[1]);
 		
+		Peer.registerPeer(new Peer(peerId, new InetSocketAddress(host, port)));
+		KeyPair keys = km.registerPeer(peerId);
+		
+		byte[] key = keys.getPublic().getEncoded();
+		println("key length:" + key.length);
+		try {
+			out.write(key);
+			out.flush();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 	}
 
 	/**
