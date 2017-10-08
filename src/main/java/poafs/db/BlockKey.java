@@ -11,6 +11,13 @@ public class BlockKey implements Serializable {
 	 */
 	private static final long serialVersionUID = 8674604801424355356L;
 
+	public BlockKey() {}
+	
+	public BlockKey(String fileId, int index) {
+		this.index = index;
+		this.parentFile = fileId;
+	}
+	
 	private int index;
     
     private String parentFile;

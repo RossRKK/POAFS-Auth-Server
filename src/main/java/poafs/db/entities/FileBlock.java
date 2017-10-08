@@ -34,6 +34,12 @@ public class FileBlock {
 	@MapsId("parentFile")
     @ManyToOne
     private PoafsFile parentFile;
+	
+	public FileBlock(String fileId, int index) {
+		this.id = new BlockKey(fileId, index);
+	}
+	
+	public FileBlock() {}
 
 	/* Getters and Setters */
 	
@@ -51,5 +57,9 @@ public class FileBlock {
 
 	public void setPeers(Collection<Peer> peers) {
 		this.peers = peers;
+	}
+
+	public void addPeer(Peer peer) {
+		peers.add(peer);
 	}
 }

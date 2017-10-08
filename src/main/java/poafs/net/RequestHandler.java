@@ -5,9 +5,13 @@ import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.security.KeyPair;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 import java.util.Scanner;
 
+import poafs.db.BlockKey;
+import poafs.db.entities.FileBlock;
 import poafs.db.entities.Peer;
 import poafs.db.entities.PoafsFile;
 import poafs.db.repo.Repository;
@@ -28,6 +32,8 @@ public class RequestHandler implements Runnable {
 	
 	private Repository<PoafsFile> fileRepo;
 	
+	private Repository<FileBlock> blockRepo;
+	
 	private KeyManager km;
 	
 	private String peerId;
@@ -39,7 +45,7 @@ public class RequestHandler implements Runnable {
 	 * @param s The connected socket.
 	 * @throws IOException
 	 */
-	public RequestHandler(Socket s, Repository<PoafsFile> fileRepo, KeyManager km, Repository<Peer> peerRepo) throws IOException {
+	public RequestHandler(Socket s, Repository<PoafsFile> fileRepo, Repository<FileBlock> fileBlockRepo, KeyManager km, Repository<Peer> peerRepo) throws IOException {
 		this.s = s;
 		out = new BufferedOutputStream(s.getOutputStream());
 		in = new Scanner(s.getInputStream());
@@ -47,6 +53,7 @@ public class RequestHandler implements Runnable {
 		this.fileRepo = fileRepo;
 		this.km = km;
 		this.peerRepo = peerRepo;
+		this.blockRepo = fileBlockRepo;
 	}
 
 	/**
@@ -95,12 +102,23 @@ public class RequestHandler implements Runnable {
 	 * @param fileId The id of the file.
 	 */
 	private void registerFile(String fileId) {
+		String lengthStr = in.nextLine();
+		
+		int length = Integer.parseInt(lengthStr.split(":")[1]);
+		
 		PoafsFile f = new PoafsFile(fileId, in.nextLine());
 		
+		List<FileBlock> newBlocks = new ArrayList<FileBlock>();
 		//record that the registering peer has every block
-		for (int i = 0; i < f.getLength(); i++) {
-			//f.getBlock(i).addPeer(peerRepo.get(peerId));
+		for (int i = 0; i < length; i++) {
+			FileBlock newBlock = new FileBlock(fileId, i);
+			newBlock.addPeer(peerRepo.get(peerId));
+			
+			newBlocks.add(newBlock);
+			
+			newBlock.setId(new BlockKey(fileId, i));
 		}
+		f.setBlocks(newBlocks);
 		
 		fileRepo.persist(f);
 		
@@ -131,7 +149,7 @@ public class RequestHandler implements Runnable {
 
 	/**
 	 * Register this peer with an address.
-	 * @param input [peerId]:[port]
+	 * @param input [host]:[port]
 	 */
 	private void registerPeer(String addr) {
 		String[] address = addr.split(":");

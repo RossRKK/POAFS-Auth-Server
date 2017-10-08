@@ -1,12 +1,8 @@
 package poafs.db.repo;
 
-import java.util.Map;
-
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.Persistence;
-
-import poafs.db.Properties;
 
 /**
  * A class that manages JPA entities.
@@ -37,16 +33,9 @@ public class Repository<Type> {
 	 */
 	public Repository(Class<Type> typeClass) {
 		this.typeClass = typeClass;
-		
-		//Properties.setup();
-
-        // This uses getPropertiesForTableValidation: to use the existing tables
-        //Map<String, String> properties = Properties.getPropertiesForTableValidation();
 
         factory = Persistence.createEntityManagerFactory(typeClass.getSimpleName() + "Service");
         entityManager = factory.createEntityManager();
-
-        factory.close();
 	}
 	
 	/**
