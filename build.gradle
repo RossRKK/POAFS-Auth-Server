@@ -9,11 +9,18 @@
 // Apply the java-library plugin to add support for Java Library
 apply plugin: 'java-library'
 
+apply plugin: 'eclipse'
+
+apply plugin: 'application'
+
+mainClassName = "poafs.Application"
+
 // In this section you declare where to find the dependencies of your project
 repositories {
     // Use jcenter for resolving your dependencies.
     // You can declare any Maven/Ivy/file repository here.
     jcenter()
+    mavenCentral()
 }
 
 dependencies {
@@ -25,5 +32,10 @@ dependencies {
 
     // Use JUnit test framework
     testImplementation 'junit:junit:4.12'
+
+	//orm dependancies
+	implementation 'org.mariadb.jdbc:mariadb-java-client:1.1.7'
+	implementation 'org.hibernate:hibernate-core:5.2.8.Final'
+	implementation 'org.hibernate.javax.persistence:hibernate-jpa-2.1-api:1.0.0.Final'
 }
 

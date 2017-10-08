@@ -7,8 +7,10 @@ import java.net.Socket;
 import javax.net.ssl.SSLServerSocket;
 import javax.net.ssl.SSLServerSocketFactory;
 
+import poafs.db.entities.Peer;
+import poafs.db.entities.PoafsFile;
+import poafs.db.repo.Repository;
 import poafs.keys.KeyManager;
-import poafs.peer.FileTracker;
 
 /**
  * The main server class.
@@ -22,24 +24,27 @@ public class Server implements Runnable {
 	 */
 	private ServerSocket ss;
 	
-	private FileTracker ft;
+	private Repository<PoafsFile> fileRepo;
 	
 	private KeyManager km;
+	
+	private Repository<Peer> peerRepo;
 	
 	/**
 	 * Create a new server on specified port.
 	 * @param port The port the server will listen on.
 	 * @throws IOException
 	 */
-	public Server(int port, FileTracker ft, KeyManager km, boolean ssl) throws IOException {
+	public Server(int port, Repository<PoafsFile> fileRepo, KeyManager km, Repository<Peer> peerRepo, boolean ssl) throws IOException {
 		if (ssl) {
 			SSLServerSocketFactory factory = (SSLServerSocketFactory) SSLServerSocketFactory.getDefault();
 			ss = (SSLServerSocket) factory.createServerSocket(port);
 		} else {
 			ss = new ServerSocket(port);
 		}
-		this.ft = ft;
+		this.fileRepo = fileRepo;
 		this.km = km;
+		this.peerRepo = peerRepo;
 	}
 	
 	/**
@@ -50,7 +55,7 @@ public class Server implements Runnable {
 			try {
 				Socket s = ss.accept();
 				
-				Thread t = new Thread(new RequestHandler(s, ft, km));
+				Thread t = new Thread(new RequestHandler(s, fileRepo, km, peerRepo));
 				t.start();
 				
 			} catch (IOException e) {

@@ -8,9 +8,10 @@ import java.security.KeyPair;
 import java.util.Collection;
 import java.util.Scanner;
 
+import poafs.db.entities.Peer;
+import poafs.db.entities.PoafsFile;
+import poafs.db.repo.Repository;
 import poafs.keys.KeyManager;
-import poafs.peer.FileTracker;
-import poafs.peer.Peer;
 
 /**
  * Class that handles incoming requests.
@@ -25,24 +26,27 @@ public class RequestHandler implements Runnable {
 	
 	private Scanner in;
 	
-	private FileTracker ft;
+	private Repository<PoafsFile> fileRepo;
 	
 	private KeyManager km;
 	
 	private String peerId;
+	
+	private Repository<Peer> peerRepo;
 	
 	/**
 	 * Setup the input and output streams.
 	 * @param s The connected socket.
 	 * @throws IOException
 	 */
-	public RequestHandler(Socket s, FileTracker ft, KeyManager km) throws IOException {
+	public RequestHandler(Socket s, Repository<PoafsFile> fileRepo, KeyManager km, Repository<Peer> peerRepo) throws IOException {
 		this.s = s;
 		out = new BufferedOutputStream(s.getOutputStream());
 		in = new Scanner(s.getInputStream());
 		
-		this.ft = ft;
+		this.fileRepo = fileRepo;
 		this.km = km;
+		this.peerRepo = peerRepo;
 	}
 
 	/**
@@ -74,9 +78,11 @@ public class RequestHandler implements Runnable {
 				case "find-block":
 					findBlock(argument);
 					break;
-				case "register":
+				case "register-peer":
 					registerPeer(argument);
 					break;
+				case "register-file":
+					registerFile(argument);
 				default:
 					unknownCommand();
 					break;
@@ -84,6 +90,23 @@ public class RequestHandler implements Runnable {
 		}
 	}
 	
+	/**
+	 * Register a new file on the network.
+	 * @param fileId The id of the file.
+	 */
+	private void registerFile(String fileId) {
+		PoafsFile f = new PoafsFile(fileId, in.nextLine());
+		
+		//record that the registering peer has every block
+		for (int i = 0; i < f.getLength(); i++) {
+			f.getBlock(i).addPeer(peerRepo.get(peerId));
+		}
+		
+		fileRepo.persist(f);
+		
+		println("Registered file:" + f.getId());
+	}
+
 	/**
 	 * Print a line back to the client.
 	 * @param str The line.
@@ -115,7 +138,8 @@ public class RequestHandler implements Runnable {
 		String host = address[0];
 		int port = Integer.parseInt(address[1]);
 		
-		Peer.registerPeer(new Peer(peerId, new InetSocketAddress(host, port)));
+		peerRepo.persist(new Peer(peerId, new InetSocketAddress(host, port)));
+		
 		KeyPair keys = km.registerPeer(peerId);
 		
 		byte[] key = keys.getPublic().getEncoded();
@@ -135,7 +159,8 @@ public class RequestHandler implements Runnable {
 	private void findBlock(String blockId) {
 		try {
 			String[] info = blockId.split(":");
-			Collection<Peer> peers = ft.getPeersWithBlock(info[0], Integer.parseInt(info[1]));
+			
+			Collection<Peer> peers = fileRepo.get(info[0]).getBlock(Integer.parseInt(info[1])).getPeers();
 			
 			println("peers length:" + peers.size());
 			
@@ -161,7 +186,7 @@ public class RequestHandler implements Runnable {
 	 * @param peerId The id of the peer.
 	 */
 	private void getHost(String peerId) {
-		Peer p = Peer.getPeer(peerId);
+		Peer p = peerRepo.get(peerId);
 		
 		println(peerId + " " + p.getAddress());
 	}

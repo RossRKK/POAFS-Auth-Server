@@ -2,13 +2,18 @@ package poafs;
 
 import java.io.IOException;
 
+import poafs.db.Properties;
+import poafs.db.entities.Peer;
+import poafs.db.entities.PoafsFile;
+import poafs.db.repo.Repository;
 import poafs.keys.KeyManager;
 import poafs.net.Server;
-import poafs.peer.FileTracker;
 
 public class Application {
 	public static void main(String[] args) throws IOException {
-		Server s = new Server(6789, new FileTracker(), new KeyManager(2048), false);
+		Properties.setup();
+		
+		Server s = new Server(6789, new Repository<PoafsFile>(PoafsFile.class), new KeyManager(2048), new Repository<Peer>(Peer.class), false);
 		s.run();
 	}
 }
