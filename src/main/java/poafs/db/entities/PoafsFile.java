@@ -5,6 +5,7 @@ import java.util.List;
 
 import javax.persistence.Entity;
 import javax.persistence.Id;
+import javax.persistence.OneToMany;
 
 /**
  * A class representing a file on the network.
@@ -34,6 +35,7 @@ public class PoafsFile {
 	/**
 	 * A list of all the blocks in this file.
 	 */
+	@OneToMany
 	private List<FileBlock> blocks = new ArrayList<FileBlock>();
 	
 	public FileBlock getBlock(int index) {

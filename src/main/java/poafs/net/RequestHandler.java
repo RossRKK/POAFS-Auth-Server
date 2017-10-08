@@ -99,7 +99,7 @@ public class RequestHandler implements Runnable {
 		
 		//record that the registering peer has every block
 		for (int i = 0; i < f.getLength(); i++) {
-			f.getBlock(i).addPeer(peerRepo.get(peerId));
+			//f.getBlock(i).addPeer(peerRepo.get(peerId));
 		}
 		
 		fileRepo.persist(f);
