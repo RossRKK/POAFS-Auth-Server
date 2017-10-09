@@ -34,7 +34,8 @@ public class Repository<Type> {
 	public Repository(Class<Type> typeClass) {
 		this.typeClass = typeClass;
 
-        factory = Persistence.createEntityManagerFactory(typeClass.getSimpleName() + "Service");
+        //factory = Persistence.createEntityManagerFactory(typeClass.getSimpleName() + "Service");
+		factory = Persistence.createEntityManagerFactory("PersistenceService");
         entityManager = factory.createEntityManager();
 	}
 	

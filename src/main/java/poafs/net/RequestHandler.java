@@ -67,32 +67,37 @@ public class RequestHandler implements Runnable {
 		peerId = in.nextLine();
 		
 		while (in.hasNextLine()) {
-			String[] response = in.nextLine().split(" ");
-			
-			String command = response[0];
-			String argument = response[1];
-			
-			switch (command) {
-				case "private-key":
-					getPrivateKey(argument);
-					break;
-				case "host":
-					getHost(argument);
-					break;
-				case "list-files":
-					listFiles(argument);
-					break;
-				case "find-block":
-					findBlock(argument);
-					break;
-				case "register-peer":
-					registerPeer(argument);
-					break;
-				case "register-file":
-					registerFile(argument);
-				default:
-					unknownCommand();
-					break;
+			try {
+				String[] response = in.nextLine().split(" ");
+				
+				String command = response[0];
+				String argument = response[1];
+				
+				switch (command) {
+					case "private-key":
+						getPrivateKey(argument);
+						break;
+					case "host":
+						getHost(argument);
+						break;
+					case "list-files":
+						listFiles(argument);
+						break;
+					case "find-block":
+						findBlock(argument);
+						break;
+					case "register-peer":
+						registerPeer(argument);
+						break;
+					case "register-file":
+						registerFile(argument);
+					default:
+						unknownCommand();
+						break;
+				}
+			} catch (Exception e) {
+				e.printStackTrace();
+				unknownCommand();
 			}
 		}
 	}
