@@ -1,5 +1,7 @@
 package poafs.db.repo;
 
+import java.util.List;
+
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.Persistence;
@@ -46,6 +48,10 @@ public class Repository<Type> {
 	 */
 	public Type get(Object id) {
 		return entityManager.find(typeClass, id);
+	}
+	
+	public List<Type> getAll() {
+		return entityManager.createQuery("SELECT e FROM " + typeClass.getSimpleName() + " e").getResultList();
 	}
 	
 	/**

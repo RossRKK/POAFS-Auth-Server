@@ -282,11 +282,17 @@ public class RequestHandler implements Runnable {
 
 	/**
 	 * List all available files.
-	 * @param filter Search query.
+	 * @param filter Search query (Currently ignored).
 	 */
 	private void listFiles(String query) {
 		if (authenticated) {
-			// TODO Auto-generated method stub
+			List<PoafsFile> files = fileRepo.getAll();
+			
+			println("length:" + files.size());
+			
+			for (PoafsFile f:files) {
+				println(f.getId() + " " + f.getName());
+			}
 		} else {
 			unauthrorised();
 		}
