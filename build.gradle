@@ -25,7 +25,8 @@ repositories {
 
 jar {
   manifest {
-    instruction 'Main-Class', 'poafs.Application'
+  attributes(
+      "Main-Class": 'poafs.Application')
   }
 }
 
