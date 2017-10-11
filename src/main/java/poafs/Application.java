@@ -24,7 +24,7 @@ public class Application {
 	public static void main(String[] args) throws IOException {
 		if (args.length >= 2) {
 			int port = Integer.parseInt(args[0]);
-			boolean ssl = Boolean.getBoolean(args[1]);
+			boolean ssl = Boolean.parseBoolean(args[1]);
 			
 			//initialise a new server object
 			Server s = new Server(port, new Repository<PoafsFile>(PoafsFile.class), 
