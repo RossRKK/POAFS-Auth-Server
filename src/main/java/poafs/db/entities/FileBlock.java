@@ -5,6 +5,7 @@ import java.util.Collection;
 
 import javax.persistence.EmbeddedId;
 import javax.persistence.Entity;
+import javax.persistence.JoinColumn;
 import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
 import javax.persistence.MapsId;
@@ -31,8 +32,9 @@ public class FileBlock {
 	@ManyToMany
 	private Collection<Peer> peers = new ArrayList<Peer>();
 	
-	@MapsId("parentFile")
+
     @ManyToOne
+    @MapsId("fileId")
     private PoafsFile parentFile;
 	
 	public FileBlock(String fileId, int index) {

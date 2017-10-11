@@ -1,9 +1,13 @@
 package poafs.db.entities;
 
 import java.net.InetSocketAddress;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 
 import javax.persistence.Entity;
 import javax.persistence.Id;
+import javax.persistence.ManyToMany;
 
 /**
  * A class that represents a peer on the network.
@@ -22,6 +26,12 @@ public class Peer {
 	 * The inet address that this peer can be reached at.
 	 */
 	private InetSocketAddress address;
+	
+	/**
+	 * The file blocks this peer has access to.
+	 */
+	@ManyToMany(mappedBy = "peers")
+	private Collection<FileBlock> blocks = new ArrayList<FileBlock>();
 
 	/**
 	 * Create a new peer.
@@ -51,5 +61,17 @@ public class Peer {
 	
 	public void setAddress(InetSocketAddress addr) {
 		this.address = addr;
+	}
+
+	public Collection<FileBlock> getBlocks() {
+		return blocks;
+	}
+
+	public void setBlocks(List<FileBlock> blocks) {
+		this.blocks = blocks;
+	}
+	
+	public void addBlock(FileBlock block) {
+		blocks.add(block);
 	}
 }

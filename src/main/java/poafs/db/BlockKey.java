@@ -2,25 +2,23 @@ package poafs.db;
 
 import java.io.Serializable;
 
+import javax.persistence.Column;
 import javax.persistence.Embeddable;
 
 @Embeddable
 public class BlockKey implements Serializable {
-    /**
-	 * 
-	 */
-	private static final long serialVersionUID = 8674604801424355356L;
 
 	public BlockKey() {}
 	
 	public BlockKey(String fileId, int index) {
 		this.index = index;
-		this.parentFile = fileId;
+		this.fileId = fileId;
 	}
 	
+	@Column(name= "block_index")
 	private int index;
-    
-    private String parentFile;
+	
+    private String fileId;
 
 	public int getIndex() {
 		return index;
@@ -31,11 +29,11 @@ public class BlockKey implements Serializable {
 	}
 
 	public String getParentFile() {
-		return parentFile;
+		return fileId;
 	}
 
 	public void setParentFile(String parentFile) {
-		this.parentFile = parentFile;
+		this.fileId = parentFile;
 	}
     
 }

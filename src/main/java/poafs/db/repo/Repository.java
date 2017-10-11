@@ -63,8 +63,10 @@ public class Repository<Type> {
 	/**
 	 * Commit all changes.
 	 */
-	public void update() {
+	public void update(Type entity) {
 		entityManager.getTransaction().begin();
+		
+		entityManager.merge(entity);
 
 		entityManager.getTransaction().commit();
 	}

@@ -113,18 +113,23 @@ public class RequestHandler implements Runnable {
 		
 		PoafsFile f = new PoafsFile(fileId, in.nextLine());
 		
+		Peer p = peerRepo.get(peerId);
+		
 		List<FileBlock> newBlocks = new ArrayList<FileBlock>();
 		//record that the registering peer has every block
 		for (int i = 0; i < length; i++) {
 			FileBlock newBlock = new FileBlock(fileId, i);
-			newBlock.addPeer(peerRepo.get(peerId));
+			newBlock.addPeer(p);
 			
 			newBlocks.add(newBlock);
 			
 			newBlock.setId(new BlockKey(fileId, i));
+			
+			p.addBlock(newBlock);
 		}
 		f.setBlocks(newBlocks);
 		
+		peerRepo.update(p);
 		fileRepo.persist(f);
 		
 		println("Registered file:" + f.getId());

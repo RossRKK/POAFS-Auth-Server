@@ -35,7 +35,7 @@ public class PoafsFile {
 	/**
 	 * A list of all the blocks in this file.
 	 */
-	@OneToMany
+	@OneToMany(mappedBy = "parentFile")
 	private List<FileBlock> blocks = new ArrayList<FileBlock>();
 	
 	public FileBlock getBlock(int index) {
