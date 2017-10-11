@@ -26,15 +26,30 @@ public class Server implements Runnable {
 	 */
 	private ServerSocket ss;
 	
+	/**
+	 * The repo that handles files.
+	 */
 	private Repository<PoafsFile> fileRepo;
 	
-	private KeyManager km;
-	
+	/**
+	 * The repo that handles peers.
+	 */
 	private Repository<Peer> peerRepo;
 	
+	/**
+	 * The repo that handles blocks.
+	 */
 	private Repository<FileBlock> blockRepo;
 	
+	/**
+	 * The repo that handles users.
+	 */
 	private Repository<User> userRepo;
+	
+	/**
+	 * The key manager.
+	 */
+	private KeyManager km;
 	
 	/**
 	 * Create a new server on specified port.

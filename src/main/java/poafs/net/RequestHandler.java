@@ -24,24 +24,54 @@ import poafs.keys.KeyManager;
  */
 public class RequestHandler implements Runnable {
 	
+	/**
+	 * The socket that connects to the client.
+	 */
 	private Socket s;
 	
+	/**
+	 * The output stream to the client.
+	 */
 	private BufferedOutputStream out;
 	
+	/**
+	 * The input stream from the client.
+	 */
 	private Scanner in;
 	
+	/**
+	 * The repository that handles files.
+	 */
 	private Repository<PoafsFile> fileRepo;
 	
+	/**
+	 * The repository that handles blocks.
+	 */
 	private Repository<FileBlock> blockRepo;
 	
-	private KeyManager km;
-	
-	private String peerId;
-	
+	/**
+	 * The repository that handles peers.
+	 */
 	private Repository<Peer> peerRepo;
 	
+	/**
+	 * The repository that handles users.
+	 */
 	private Repository<User> userRepo;
 	
+	/**
+	 * The local key manager.
+	 */
+	private KeyManager km;
+	
+	/**
+	 * The id of the current peer.
+	 */
+	private String peerId;
+
+	/**
+	 * Whether the user has successfully authenticated since connecting.
+	 */
 	private boolean authenticated = false;
 	
 	/**
@@ -67,7 +97,6 @@ public class RequestHandler implements Runnable {
 	 */
 	@Override
 	public void run() {
-		//TODO authenticate the connection
 		println("POAFS Auth 0.1");
 		
 		peerId = in.nextLine();
@@ -79,6 +108,7 @@ public class RequestHandler implements Runnable {
 				String command = response[0];
 				String argument = response[1];
 				
+				//switch on the command
 				switch (command) {
 					case "private-key":
 						getPrivateKey(argument);
@@ -115,6 +145,10 @@ public class RequestHandler implements Runnable {
 		}
 	}
 	
+	/**
+	 * Register a new user.
+	 * @param userName The users user name.
+	 */
 	private void registerUser(String userName) {
 		String pass = in.nextLine();
 		
@@ -122,6 +156,10 @@ public class RequestHandler implements Runnable {
 		userRepo.persist(u);
 	}
 
+	/**
+	 * Log a user in to the auth server.
+	 * @param userName The users user name.
+	 */
 	private void login(String userName) {
 		User u = userRepo.get(userName);
 		String pass = in.nextLine();
@@ -289,6 +327,9 @@ public class RequestHandler implements Runnable {
 		}
 	}
 
+	/**
+	 * Tell the client that it is unauthorised and close the connection.
+	 */
 	private void unauthrorised() {
 		println("Unauthorised");
 		try {

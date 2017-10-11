@@ -13,12 +13,26 @@ import javax.persistence.Id;
 @Entity
 public class User {
 	@Id
+	/**
+	 * This users unique user name.
+	 */
 	private String userName;
 	
+	/**
+	 * This users random salt.
+	 */
 	private byte[] salt;
 	
+	/**
+	 * The hashed and salted form of this users password.
+	 */
 	private byte[] hash;
 	
+	/**
+	 * Create a user, automatically set up salt and hash.
+	 * @param userName This users username.
+	 * @param password Plain text password.
+	 */
 	public User(String userName, String password) {
 		this.userName = userName;
 		generateSalt();
@@ -43,6 +57,11 @@ public class User {
 		return true;
 	}
 	
+	/**
+	 * Hash an input password using this users salt.
+	 * @param password The input (plain text password).
+	 * @return The resulting hash.
+	 */
 	private byte[] hash(String password) {
 		try {
 			KeySpec spec = new PBEKeySpec(password.toCharArray(), salt, 65536, 128);
@@ -56,6 +75,9 @@ public class User {
 		}
 	}
 	
+	/**
+	 * Generate a new secure random salt.
+	 */
 	private void generateSalt() {
 		SecureRandom random = new SecureRandom();
 		salt = new byte[20];
