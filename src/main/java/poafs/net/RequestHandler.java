@@ -10,10 +10,10 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Scanner;
 
-import poafs.db.BlockKey;
 import poafs.db.entities.FileBlock;
 import poafs.db.entities.Peer;
 import poafs.db.entities.PoafsFile;
+import poafs.db.entities.User;
 import poafs.db.repo.Repository;
 import poafs.keys.KeyManager;
 
@@ -40,12 +40,17 @@ public class RequestHandler implements Runnable {
 	
 	private Repository<Peer> peerRepo;
 	
+	private Repository<User> userRepo;
+	
+	private boolean authenticated = false;
+	
 	/**
 	 * Setup the input and output streams.
 	 * @param s The connected socket.
 	 * @throws IOException
 	 */
-	public RequestHandler(Socket s, Repository<PoafsFile> fileRepo, Repository<FileBlock> fileBlockRepo, KeyManager km, Repository<Peer> peerRepo) throws IOException {
+	public RequestHandler(Socket s, Repository<PoafsFile> fileRepo, Repository<FileBlock> fileBlockRepo, 
+			KeyManager km, Repository<Peer> peerRepo, Repository<User> userRepo) throws IOException {
 		this.s = s;
 		out = new BufferedOutputStream(s.getOutputStream());
 		in = new Scanner(s.getInputStream());
@@ -54,6 +59,7 @@ public class RequestHandler implements Runnable {
 		this.km = km;
 		this.peerRepo = peerRepo;
 		this.blockRepo = fileBlockRepo;
+		this.userRepo = userRepo;
 	}
 
 	/**
@@ -91,6 +97,13 @@ public class RequestHandler implements Runnable {
 						break;
 					case "register-file":
 						registerFile(argument);
+						break;
+					case "login":
+						login(argument);
+						break;
+					case "register-user":
+						registerUser(argument);
+						break;
 					default:
 						unknownCommand();
 						break;
@@ -102,34 +115,54 @@ public class RequestHandler implements Runnable {
 		}
 	}
 	
+	private void registerUser(String userName) {
+		String pass = in.nextLine();
+		
+		User u = new User(userName, pass);
+		userRepo.persist(u);
+	}
+
+	private void login(String userName) {
+		User u = userRepo.get(userName);
+		String pass = in.nextLine();
+		
+		authenticated = u.correctPassword(pass);
+		
+		println("" + authenticated);
+	}
+
 	/**
 	 * Register a new file on the network.
 	 * @param fileId The id of the file.
 	 */
 	private void registerFile(String fileId) {
-		String lengthStr = in.nextLine();
-		
-		int length = Integer.parseInt(lengthStr.split(":")[1]);
-		
-		PoafsFile f = new PoafsFile(fileId, in.nextLine());
-		
-		Peer p = peerRepo.get(peerId);
-		
-		List<FileBlock> newBlocks = new ArrayList<FileBlock>();
-		//record that the registering peer has every block
-		for (int i = 0; i < length; i++) {
-			FileBlock newBlock = new FileBlock(f, i);
-			newBlock.addPeer(p);
+		if (authenticated) {
+			String lengthStr = in.nextLine();
 			
-			newBlocks.add(newBlock);
+			int length = Integer.parseInt(lengthStr.split(":")[1]);
 			
-			blockRepo.persist(newBlock);
+			PoafsFile f = new PoafsFile(fileId, in.nextLine());
+			
+			Peer p = peerRepo.get(peerId);
+			
+			List<FileBlock> newBlocks = new ArrayList<FileBlock>();
+			//record that the registering peer has every block
+			for (int i = 0; i < length; i++) {
+				FileBlock newBlock = new FileBlock(f, i);
+				newBlock.addPeer(p);
+				
+				newBlocks.add(newBlock);
+				
+				blockRepo.persist(newBlock);
+			}
+			f.setBlocks(newBlocks);
+			
+			fileRepo.persist(f);
+			
+			println("Registered file:" + f.getId());
+		} else {
+			unauthrorised();
 		}
-		f.setBlocks(newBlocks);
-		
-		fileRepo.persist(f);
-		
-		println("Registered file:" + f.getId());
 	}
 
 	/**
@@ -159,25 +192,29 @@ public class RequestHandler implements Runnable {
 	 * @param input [host]:[port]
 	 */
 	private void registerPeer(String addr) {
-		String[] address = addr.split(":");
-		String host = address[0];
-		int port = Integer.parseInt(address[1]);
-		
-		Peer p = new Peer(peerId, new InetSocketAddress(host, port));
-		
-		KeyPair keys = km.buildRSAKeyPair();
-		
-		p.setKeys(keys);
-		
-		peerRepo.persist(p);
+		if (authenticated) {
+			String[] address = addr.split(":");
+			String host = address[0];
+			int port = Integer.parseInt(address[1]);
+			
+			Peer p = new Peer(peerId, new InetSocketAddress(host, port));
+			
+			KeyPair keys = km.buildRSAKeyPair();
+			
+			p.setKeys(keys);
+			
+			peerRepo.persist(p);
 
-		byte[] key = keys.getPublic().getEncoded();
-		println("key length:" + key.length);
-		try {
-			out.write(key);
-			out.flush();
-		} catch (IOException e) {
-			e.printStackTrace();
+			byte[] key = keys.getPublic().getEncoded();
+			println("key length:" + key.length);
+			try {
+				out.write(key);
+				out.flush();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		} else {
+			unauthrorised();
 		}
 	}
 
@@ -186,20 +223,23 @@ public class RequestHandler implements Runnable {
 	 * @param blockId The unique identifier of the block (i.e. [fileId]:[index])
 	 */
 	private void findBlock(String blockId) {
-		try {
-			String[] info = blockId.split(":");
-			
-			Collection<Peer> peers = fileRepo.get(info[0]).getBlock(Integer.parseInt(info[1])).getPeers();
-			
-			println("peers length:" + peers.size());
-			
-			peers.forEach(peer -> println(peer.getId()));
-		} catch (IndexOutOfBoundsException | NumberFormatException e) {
-			println("Error parsing block id");
-			System.err.println("Error parsing block id: " + blockId);
-			e.printStackTrace();
+		if (authenticated) {
+			try {
+				String[] info = blockId.split(":");
+				
+				Collection<Peer> peers = fileRepo.get(info[0]).getBlock(Integer.parseInt(info[1])).getPeers();
+				
+				println("peers length:" + peers.size());
+				
+				peers.forEach(peer -> println(peer.getId()));
+			} catch (IndexOutOfBoundsException | NumberFormatException e) {
+				println("Error parsing block id");
+				System.err.println("Error parsing block id: " + blockId);
+				e.printStackTrace();
+			}
+		} else {
+			unauthrorised();
 		}
-		
 	}
 
 	/**
@@ -207,7 +247,11 @@ public class RequestHandler implements Runnable {
 	 * @param filter Search query.
 	 */
 	private void listFiles(String query) {
-		// TODO Auto-generated method stub
+		if (authenticated) {
+			// TODO Auto-generated method stub
+		} else {
+			unauthrorised();
+		}
 	}
 
 	/**
@@ -215,9 +259,13 @@ public class RequestHandler implements Runnable {
 	 * @param peerId The id of the peer.
 	 */
 	private void getHost(String peerId) {
-		Peer p = peerRepo.get(peerId);
-		
-		println(peerId + " " + p.getAddress());
+		if (authenticated) {
+			Peer p = peerRepo.get(peerId);
+			
+			println(peerId + " " + p.getAddress());
+		} else {
+			unauthrorised();
+		}
 	}
 
 	/**
@@ -225,13 +273,26 @@ public class RequestHandler implements Runnable {
 	 * @param peerId The peer's id.
 	 */
 	private void getPrivateKey(String peerId) {
-		byte[] key = peerRepo.get(peerId).getPrivateKey().getEncoded();
-		
-		println("key length:" + key.length);
-		
+		if (authenticated) {
+			byte[] key = peerRepo.get(peerId).getPrivateKey().getEncoded();
+			
+			println("key length:" + key.length);
+			
+			try {
+				out.write(key);
+				out.flush();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		} else {
+			unauthrorised();
+		}
+	}
+
+	private void unauthrorised() {
+		println("Unauthorised");
 		try {
-			out.write(key);
-			out.flush();
+			s.close();
 		} catch (IOException e) {
 			e.printStackTrace();
 		}

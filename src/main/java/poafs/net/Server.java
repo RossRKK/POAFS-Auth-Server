@@ -10,6 +10,7 @@ import javax.net.ssl.SSLServerSocketFactory;
 import poafs.db.entities.FileBlock;
 import poafs.db.entities.Peer;
 import poafs.db.entities.PoafsFile;
+import poafs.db.entities.User;
 import poafs.db.repo.Repository;
 import poafs.keys.KeyManager;
 
@@ -31,14 +32,16 @@ public class Server implements Runnable {
 	
 	private Repository<Peer> peerRepo;
 	
-	Repository<FileBlock> blockRepo;
+	private Repository<FileBlock> blockRepo;
+	
+	private Repository<User> userRepo;
 	
 	/**
 	 * Create a new server on specified port.
 	 * @param port The port the server will listen on.
 	 * @throws IOException
 	 */
-	public Server(int port, Repository<PoafsFile> fileRepo, Repository<FileBlock> fileBlockRepo, KeyManager km, Repository<Peer> peerRepo, boolean ssl) throws IOException {
+	public Server(int port, Repository<PoafsFile> fileRepo, Repository<FileBlock> fileBlockRepo, KeyManager km, Repository<Peer> peerRepo, Repository<User> userRepo, boolean ssl) throws IOException {
 		if (ssl) {
 			SSLServerSocketFactory factory = (SSLServerSocketFactory) SSLServerSocketFactory.getDefault();
 			ss = (SSLServerSocket) factory.createServerSocket(port);
@@ -49,6 +52,7 @@ public class Server implements Runnable {
 		this.km = km;
 		this.peerRepo = peerRepo;
 		this.blockRepo = fileBlockRepo;
+		this.userRepo = userRepo;
 	}
 	
 	/**
@@ -59,7 +63,7 @@ public class Server implements Runnable {
 			try {
 				Socket s = ss.accept();
 				
-				Thread t = new Thread(new RequestHandler(s, fileRepo, blockRepo, km, peerRepo));
+				Thread t = new Thread(new RequestHandler(s, fileRepo, blockRepo, km, peerRepo, userRepo));
 				t.start();
 				
 			} catch (IOException e) {
