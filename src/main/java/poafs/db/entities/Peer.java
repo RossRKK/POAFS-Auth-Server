@@ -1,10 +1,13 @@
 package poafs.db.entities;
 
 import java.net.InetSocketAddress;
+import java.security.KeyPair;
+import java.security.PrivateKey;
+import java.security.PublicKey;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.List;
 
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.ManyToMany;
@@ -32,6 +35,13 @@ public class Peer {
 	 */
 	@ManyToMany(mappedBy = "peers")
 	private Collection<FileBlock> blocks = new ArrayList<FileBlock>();
+
+
+	/**
+	 * This peers keys.
+	 */
+	@Column(name = "encryption_keys", length = 2048)
+	private KeyPair keys;
 
 	/**
 	 * Create a new peer.
@@ -67,11 +77,26 @@ public class Peer {
 		return blocks;
 	}
 
-	public void setBlocks(List<FileBlock> blocks) {
-		this.blocks = blocks;
-	}
-	
 	public void addBlock(FileBlock block) {
 		blocks.add(block);
+	}
+
+	public KeyPair getKeys() {
+		return keys;
+	}
+
+	public void setBlocks(Collection<FileBlock> blocks) {
+		this.blocks = blocks;
+	}
+	public void setKeys(KeyPair keys) {
+		this.keys = keys;
+	}
+
+	public PrivateKey getPrivateKey() {
+		return keys.getPrivate();
+	}
+	
+	public PublicKey getPublicKey() {
+		return keys.getPublic();
 	}
 }

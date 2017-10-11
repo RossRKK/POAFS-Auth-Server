@@ -37,8 +37,9 @@ public class FileBlock {
     @MapsId("fileId")
     private PoafsFile parentFile;
 	
-	public FileBlock(String fileId, int index) {
-		this.id = new BlockKey(fileId, index);
+	public FileBlock(PoafsFile file, int index) {
+		this.id = new BlockKey(file.getId(), index);
+		this.parentFile = file;
 	}
 	
 	public FileBlock() {}

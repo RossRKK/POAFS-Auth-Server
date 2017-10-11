@@ -118,18 +118,15 @@ public class RequestHandler implements Runnable {
 		List<FileBlock> newBlocks = new ArrayList<FileBlock>();
 		//record that the registering peer has every block
 		for (int i = 0; i < length; i++) {
-			FileBlock newBlock = new FileBlock(fileId, i);
+			FileBlock newBlock = new FileBlock(f, i);
 			newBlock.addPeer(p);
 			
 			newBlocks.add(newBlock);
 			
-			newBlock.setId(new BlockKey(fileId, i));
-			
-			p.addBlock(newBlock);
+			blockRepo.persist(newBlock);
 		}
 		f.setBlocks(newBlocks);
 		
-		peerRepo.update(p);
 		fileRepo.persist(f);
 		
 		println("Registered file:" + f.getId());
@@ -166,10 +163,14 @@ public class RequestHandler implements Runnable {
 		String host = address[0];
 		int port = Integer.parseInt(address[1]);
 		
-		peerRepo.persist(new Peer(peerId, new InetSocketAddress(host, port)));
+		Peer p = new Peer(peerId, new InetSocketAddress(host, port));
 		
-		KeyPair keys = km.registerPeer(peerId);
+		KeyPair keys = km.buildRSAKeyPair();
 		
+		p.setKeys(keys);
+		
+		peerRepo.persist(p);
+
 		byte[] key = keys.getPublic().getEncoded();
 		println("key length:" + key.length);
 		try {
@@ -224,7 +225,7 @@ public class RequestHandler implements Runnable {
 	 * @param peerId The peer's id.
 	 */
 	private void getPrivateKey(String peerId) {
-		byte[] key = km.getPrivateKeyForPeer(peerId).getEncoded();
+		byte[] key = peerRepo.get(peerId).getPrivateKey().getEncoded();
 		
 		println("key length:" + key.length);
 		
