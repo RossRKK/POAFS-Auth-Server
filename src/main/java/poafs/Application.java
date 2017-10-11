@@ -22,9 +22,17 @@ public class Application {
 	 * @throws IOException
 	 */
 	public static void main(String[] args) throws IOException {
-		//initialise a new server object
-		Server s = new Server(6789, new Repository<PoafsFile>(PoafsFile.class), new Repository<FileBlock>(FileBlock.class), 
-				new KeyManager(2048), new Repository<Peer>(Peer.class), new Repository<User>(User.class), false);
-		s.run();
+		if (args.length >= 2) {
+			int port = Integer.parseInt(args[0]);
+			boolean ssl = Boolean.getBoolean(args[1]);
+			
+			//initialise a new server object
+			Server s = new Server(port, new Repository<PoafsFile>(PoafsFile.class), 
+					new Repository<FileBlock>(FileBlock.class), new KeyManager(2048), 
+					new Repository<Peer>(Peer.class), new Repository<User>(User.class), ssl);
+			s.run();
+		} else {
+			System.out.println("Usage: java Application <port> <use-ssl>");
+		}
 	}
 }
