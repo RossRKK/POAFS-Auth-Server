@@ -151,12 +151,16 @@ public class RequestHandler implements Runnable {
 				}
 			} catch (Exception e) {
 				e.printStackTrace();
-				unknownCommand();
+				unknownException();
 			}
 		}
 		System.out.println("Connection Ended");
 	}
 	
+	private void unknownException() {
+		println("Unknown exception");
+	}
+
 	/**
 	 * Send back the info for a file.
 	 * @param fileId The id of the file.
@@ -255,16 +259,14 @@ public class RequestHandler implements Runnable {
 	 * Register this peer with an address.
 	 * @param input [host]:[port]
 	 */
-	private void registerPeer(String addr) {
+	private void registerPeer(String portStr) {
 		if (authenticated) {
-			String[] address = addr.split(":");
-			String host = address[0];
-			int port = Integer.parseInt(address[1]);
+			int port = Integer.parseInt(portStr);
 			
 			byte[] key;
 			if (peerRepo.get(peerId) == null) {
 				
-				Peer p = new Peer(peerId, new InetSocketAddress(host, port));
+				Peer p = new Peer(peerId, new InetSocketAddress(s.getInetAddress().getHostAddress(), port));
 				
 				KeyPair keys = km.buildRSAKeyPair();
 				
