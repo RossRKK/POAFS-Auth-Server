@@ -154,6 +154,7 @@ public class RequestHandler implements Runnable {
 				unknownCommand();
 			}
 		}
+		System.out.println("Connection Ended");
 	}
 	
 	/**
@@ -166,6 +167,7 @@ public class RequestHandler implements Runnable {
 		println("id:" + f.getId());
 		println("name:" + f.getName());
 		println("length:" + f.getLength());
+		System.out.println("Sent file info");
 	}
 
 	/**
@@ -337,7 +339,7 @@ public class RequestHandler implements Runnable {
 		if (authenticated) {
 			Peer p = peerRepo.get(peerId);
 			
-			println(peerId + " " + p.getAddress());
+			println(p.getAddress().toString());
 		} else {
 			unauthrorised();
 		}
