@@ -65,4 +65,12 @@ public class FileBlock {
 	public void addPeer(Peer peer) {
 		peers.add(peer);
 	}
+
+	public PoafsFile getParentFile() {
+		return parentFile;
+	}
+
+	public void setParentFile(PoafsFile parentFile) {
+		this.parentFile = parentFile;
+	}
 }

@@ -68,6 +68,11 @@ public class RequestHandler implements Runnable {
 	 * The id of the current peer.
 	 */
 	private String peerId;
+	
+	/**
+	 * The version the client said it was.
+	 */
+	private String version;
 
 	/**
 	 * Whether the user has successfully authenticated since connecting.
@@ -99,6 +104,7 @@ public class RequestHandler implements Runnable {
 	public void run() {
 		println("POAFS Auth 0.1");
 		
+		version = in.nextLine();
 		peerId = in.nextLine();
 		
 		while (in.hasNextLine()) {
@@ -107,6 +113,8 @@ public class RequestHandler implements Runnable {
 				
 				String command = response[0];
 				String argument = response[1];
+				
+				System.out.println("Command: " + command + " " + argument);
 				
 				//switch on the command
 				switch (command) {
@@ -118,6 +126,9 @@ public class RequestHandler implements Runnable {
 						break;
 					case "list-files":
 						listFiles(argument);
+						break;
+					case "file-info":
+						fileInfo(argument);
 						break;
 					case "find-block":
 						findBlock(argument);
@@ -145,6 +156,18 @@ public class RequestHandler implements Runnable {
 		}
 	}
 	
+	/**
+	 * Send back the info for a file.
+	 * @param fileId The id of the file.
+	 */
+	private void fileInfo(String fileId) {
+		PoafsFile f = fileRepo.get(fileId);
+		
+		println("id:" + f.getId());
+		println("name:" + f.getName());
+		println("length:" + f.getLength());
+	}
+
 	/**
 	 * Register a new user.
 	 * @param userName The users user name.
@@ -175,6 +198,7 @@ public class RequestHandler implements Runnable {
 	 */
 	private void registerFile(String fileId) {
 		if (authenticated) {
+			System.out.println("Registering file");
 			String lengthStr = in.nextLine();
 			
 			int length = Integer.parseInt(lengthStr.split(":")[1]);
@@ -188,16 +212,16 @@ public class RequestHandler implements Runnable {
 			for (int i = 0; i < length; i++) {
 				FileBlock newBlock = new FileBlock(f, i);
 				newBlock.addPeer(p);
+				newBlock.setParentFile(f);
 				
 				newBlocks.add(newBlock);
-				
-				blockRepo.persist(newBlock);
 			}
 			f.setBlocks(newBlocks);
-			
 			fileRepo.persist(f);
 			
+			
 			println("Registered file:" + f.getId());
+			System.out.println("File Registered");
 		} else {
 			unauthrorised();
 		}
@@ -211,7 +235,7 @@ public class RequestHandler implements Runnable {
 	private void println(String str) {
 		try {
 			out.write((str + "\r\n").getBytes());
-			
+			System.out.println("Sent:" + str);
 			out.flush();
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -235,15 +259,22 @@ public class RequestHandler implements Runnable {
 			String host = address[0];
 			int port = Integer.parseInt(address[1]);
 			
-			Peer p = new Peer(peerId, new InetSocketAddress(host, port));
+			byte[] key;
+			if (peerRepo.get(peerId) == null) {
+				
+				Peer p = new Peer(peerId, new InetSocketAddress(host, port));
+				
+				KeyPair keys = km.buildRSAKeyPair();
+				
+				p.setKeys(keys);
+				
+				peerRepo.persist(p);
+	
+				key = keys.getPublic().getEncoded();
+			} else {
+				key = peerRepo.get(peerId).getKeys().getPublic().getEncoded();
+			}
 			
-			KeyPair keys = km.buildRSAKeyPair();
-			
-			p.setKeys(keys);
-			
-			peerRepo.persist(p);
-
-			byte[] key = keys.getPublic().getEncoded();
 			println("key length:" + key.length);
 			try {
 				out.write(key);
@@ -291,7 +322,7 @@ public class RequestHandler implements Runnable {
 			println("length:" + files.size());
 			
 			for (PoafsFile f:files) {
-				println(f.getId() + " " + f.getName());
+				println(f.getId() + ":" + f.getName() + ":" + f.getLength());
 			}
 		} else {
 			unauthrorised();
