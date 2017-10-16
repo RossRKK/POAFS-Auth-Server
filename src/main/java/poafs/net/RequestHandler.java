@@ -212,6 +212,8 @@ public class RequestHandler implements Runnable {
 			PoafsFile f = new PoafsFile(fileId, in.nextLine());
 			
 			Peer p = peerRepo.get(peerId);
+
+			fileRepo.persist(f);
 			
 			List<FileBlock> newBlocks = new ArrayList<FileBlock>();
 			//record that the registering peer has every block
@@ -221,9 +223,10 @@ public class RequestHandler implements Runnable {
 				newBlock.setParentFile(f);
 				
 				newBlocks.add(newBlock);
+				
+				blockRepo.update(newBlock);
 			}
 			f.setBlocks(newBlocks);
-			fileRepo.persist(f);
 			
 			
 			println("Registered file:" + f.getId());
@@ -266,7 +269,7 @@ public class RequestHandler implements Runnable {
 			byte[] key;
 			if (peerRepo.get(peerId) == null) {
 				
-				Peer p = new Peer(peerId, new InetSocketAddress(s.getInetAddress().getHostAddress(), port));
+				Peer p = new Peer(peerId, s.getInetAddress().getHostAddress(), port);
 				
 				KeyPair keys = km.buildRSAKeyPair();
 				
@@ -276,7 +279,15 @@ public class RequestHandler implements Runnable {
 	
 				key = keys.getPublic().getEncoded();
 			} else {
-				key = peerRepo.get(peerId).getKeys().getPublic().getEncoded();
+				Peer p = peerRepo.get(peerId);
+				
+				p.setHost(s.getInetAddress().getHostAddress());
+				
+				p.setPort(port);
+				
+				peerRepo.update(p);
+				
+				key = p.getKeys().getPublic().getEncoded();
 			}
 			
 			println("key length:" + key.length);
@@ -341,7 +352,7 @@ public class RequestHandler implements Runnable {
 		if (authenticated) {
 			Peer p = peerRepo.get(peerId);
 			
-			println(p.getAddress().toString());
+			println(p.getHost() + ":" + p.getPort());
 		} else {
 			unauthrorised();
 		}

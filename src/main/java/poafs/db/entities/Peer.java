@@ -1,6 +1,5 @@
 package poafs.db.entities;
 
-import java.net.InetSocketAddress;
 import java.security.KeyPair;
 import java.security.PrivateKey;
 import java.security.PublicKey;
@@ -26,9 +25,14 @@ public class Peer {
 	private String id;
 
 	/**
-	 * The inet address that this peer can be reached at.
+	 * The host this peer can be connected to on.
 	 */
-	private InetSocketAddress address;
+	private String host;
+	
+	/**
+	 * The port this peer can be connected to on.
+	 */
+	private int port;
 	
 	/**
 	 * The file blocks this peer has access to.
@@ -48,9 +52,10 @@ public class Peer {
 	 * @param id The id of the peer.
 	 * @param addr The address of the peer.
 	 */
-	public Peer(String id, InetSocketAddress addr) {
-		this.address = addr;
+	public Peer(String id, String host, int port) {
 		this.id = id;
+		this.host = host;
+		this.port = port;
 	}
 	
 	public Peer() {
@@ -63,14 +68,6 @@ public class Peer {
 
 	public void setId(String id) {
 		this.id = id;
-	}
-
-	public InetSocketAddress getAddress() {
-		return address;
-	}
-	
-	public void setAddress(InetSocketAddress addr) {
-		this.address = addr;
 	}
 
 	public Collection<FileBlock> getBlocks() {
@@ -99,4 +96,21 @@ public class Peer {
 	public PublicKey getPublicKey() {
 		return keys.getPublic();
 	}
+
+	public String getHost() {
+		return host;
+	}
+
+	public void setHost(String host) {
+		this.host = host;
+	}
+
+	public int getPort() {
+		return port;
+	}
+
+	public void setPort(int port) {
+		this.port = port;
+	}
+	
 }
